@@ -10,8 +10,9 @@ import { JwtService } from '../../service/jwt.service';
   styleUrls: ['./report.component.scss']
 })
 export class ReportComponent implements OnInit {
-  students: Student[] = []; // Adjusted to your Student model
+  students: Student[] = [];
   paginatedStudents: Student[] = [];
+  filteredStudents: Student[] = []; 
   filters = {
     studentId: null,
     className: '',
@@ -24,9 +25,7 @@ export class ReportComponent implements OnInit {
   itemsPerPage: number = 10; // Set number of items per page
   currentPage: number = 1;
 
-  constructor(
-    private service: JwtService
-  ) { }
+  constructor(private service: JwtService) {}
 
   ngOnInit() {
     this.loadStudents();
@@ -35,44 +34,59 @@ export class ReportComponent implements OnInit {
   loadStudents() {
     this.service.getAllStudentData().subscribe((data) => { 
       this.students = data;
+      this.filteredStudents = data; // Initialize filteredStudents with all students
       this.totalItems = this.students.length;
-      this.paginatedStudents = this.students.slice(0, this.itemsPerPage);
+      this.updatePaginatedStudents(); // Update paginated students initially
     });
   }
 
   applyFilters() {
-    // Check if there are any non-empty filters
-    const hasFilters = this.filters.studentId || 
-                      this.filters.className || 
-                      this.filters.startScore || 
-                      this.filters.endScore || 
-                      this.filters.startDate || 
-                      this.filters.endDate;
-
-    const filteredStudents = this.students.filter(student => {
+    this.filteredStudents = this.students.filter(student => {
         const dob = new Date(student.dateOfBirth).getTime();
         const startDate = this.filters.startDate ? new Date(this.filters.startDate).getTime() : null; 
         const endDate = this.filters.endDate ? new Date(this.filters.endDate).getTime() : null;
 
+        const classFilter = this.filters.className ? student.className.includes(this.filters.className) : true;
+
         return (!this.filters.studentId || student.studentId === this.filters.studentId) &&
-               (!this.filters.className || student.className.includes(this.filters.className)) && 
+               (classFilter) &&
                (!this.filters.startScore || student.score >= this.filters.startScore) &&
                (!this.filters.endScore || student.score <= this.filters.endScore) &&
                (startDate === null || dob >= startDate) && 
                (endDate === null || dob <= endDate);
     });
 
-    // If no filters are applied, return all students
-    this.students = hasFilters ? filteredStudents : this.students;
+    this.totalItems = this.filteredStudents.length; // Update total items based on filtered results
+    this.currentPage = 1; // Reset to first page
+    this.updatePaginatedStudents(); // Call method to update paginated results
 }
 
 
 
 
+  resetFilters() {
+    this.filters = {
+      studentId: null,
+      className: '',
+      startScore: null,
+      endScore: null,
+      startDate: null,
+      endDate: null,
+    };
+    this.filteredStudents = this.students; // Reset to all students
+    this.totalItems = this.students.length; // Update total items
+    this.currentPage = 1; // Reset to first page
+    this.updatePaginatedStudents(); // Update paginated students
+  }
+
+  updatePaginatedStudents() {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    this.paginatedStudents = this.filteredStudents.slice(startIndex, startIndex + this.itemsPerPage);
+  }
+
   onPageChange(page: number) {
     this.currentPage = page;
-    const startIndex = (page - 1) * this.itemsPerPage;
-    this.paginatedStudents = this.students.slice(startIndex, startIndex + this.itemsPerPage);
+    this.updatePaginatedStudents(); // Update paginated students on page change
   }
 
   exportToExcel() {

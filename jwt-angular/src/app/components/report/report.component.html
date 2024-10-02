@@ -34,6 +34,7 @@
   
       <button (click)="applyFilters()">Apply Filters</button>
       <button (click)="exportToExcel()">Export to Excel</button>
+      <button (click)="resetFilters()">Reset Filters</button>
     </div>
   
     <div>
@@ -49,7 +50,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let student of students | paginate: { itemsPerPage: itemsPerPage, currentPage: currentPage }">
+            <tr *ngFor="let student of filteredStudents | paginate: { itemsPerPage: itemsPerPage, currentPage: currentPage }">
               <td>{{ student.studentId }}</td>
               <td>{{ student.firstName }}</td>
               <td>{{ student.lastName }}</td>
