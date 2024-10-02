@@ -29,6 +29,24 @@ export class JwtService {
     });
   }
 
+  generateData(count: number): Observable<any> {
+    return this.http.post(BASE_URL+ `generate/${count}`,{
+      headers: this.createAuthorizationHeader()
+    });
+  }
+
+  processData(): Observable<any> {
+    return this.http.post(BASE_URL + 'processFile', {}, {
+      headers: this.createAuthorizationHeader()
+    });
+  }
+
+  uploadData(): Observable<any> {
+    return this.http.post(BASE_URL + 'uploadData', {}, {
+      headers: this.createAuthorizationHeader()
+    });
+  }
+
   private createAuthorizationHeader(): HttpHeaders | undefined {
     if (isPlatformBrowser(this.platformId)) {
       const jwtToken = localStorage.getItem('jwt');

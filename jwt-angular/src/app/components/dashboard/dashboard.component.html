@@ -1,1 +1,41 @@
-<p>dashboard works!</p>
+<div class="container mt-5 text-center">
+    <!-- Moving banner -->
+    <marquee behavior="scroll" direction="left" class="display-6 text-primary mb-4">
+      Welcome to Data Processing
+    </marquee>
+  
+    <!-- Generate Data Section -->
+    <div>
+        <label for="studentCount">Enter the number of students:</label>
+        <input 
+          type="number" 
+          [(ngModel)]="studentCount" 
+          id="studentCount" 
+          placeholder="Enter count" 
+          class="form-control w-40"
+        />
+        <button class="btn btn-primary mt-3" (click)="generateData()">Generate Student Data</button>
+      </div>
+      
+      
+  
+    <!-- Process and Upload Data Buttons -->
+    <div class="d-flex justify-content-center">
+      <button class="btn btn-success me-3" (click)="processData()">Process Data</button>
+      <button class="btn btn-info" (click)="uploadData()">Upload Data</button>
+    </div>
+  </div>
+  
+  <!-- Optional Styling -->
+  <style>
+    .container {
+      max-width: 600px; /* Set maximum width for better layout */
+    }
+    .btn {
+      width: 150px; /* Set button width for consistency */
+    }
+    .form-control {
+      max-width: 300px; /* Limit the width of the input box */
+    }
+  </style>
+  
