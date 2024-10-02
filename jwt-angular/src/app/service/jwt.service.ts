@@ -16,7 +16,7 @@ export class JwtService {
   ) { }
 
   register(registerRequest: any): Observable<any> {
-    return this.http.post(BASE_URL + 'api/register', registerRequest);
+    return this.http.post(BASE_URL + 'register', registerRequest);
   }
 
   login(loginRequest: any): Observable<any> {
@@ -43,6 +43,12 @@ export class JwtService {
 
   uploadData(): Observable<any> {
     return this.http.post(BASE_URL + 'uploadData', {}, {
+      headers: this.createAuthorizationHeader()
+    });
+  }
+
+  getAllStudentData(): Observable<any> {
+    return this.http.get(BASE_URL + 'students', {
       headers: this.createAuthorizationHeader()
     });
   }

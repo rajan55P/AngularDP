@@ -1,0 +1,66 @@
+<div class="report-container">
+    <h1>Student Report</h1>
+  
+    <div class="filters">
+      <div>
+        <label for="studentId">Student ID:</label>
+        <input type="number" [(ngModel)]="filters.studentId" id="studentId" />
+      </div>
+  
+      <div>
+        <label for="class">Class:</label>
+        <input type="text" [(ngModel)]="filters.className" id="class" />
+      </div>
+  
+      <div>
+        <label for="startScore">Start Score:</label>
+        <input type="number" [(ngModel)]="filters.startScore" id="startScore" />
+      </div>
+  
+      <div>
+        <label for="endScore">End Score:</label>
+        <input type="number" [(ngModel)]="filters.endScore" id="endScore" />
+      </div>
+  
+      <div>
+        <label for="startDate">Start Date:</label>
+        <input type="date" [(ngModel)]="filters.startDate" id="startDate" />
+      </div>
+  
+      <div>
+        <label for="endDate">End Date:</label>
+        <input type="date" [(ngModel)]="filters.endDate" id="endDate" />
+      </div>
+  
+      <button (click)="applyFilters()">Apply Filters</button>
+      <button (click)="exportToExcel()">Export to Excel</button>
+    </div>
+  
+    <div>
+        <table>
+          <thead>
+            <tr>
+              <th>Student ID</th>
+              <th>First Name</th>
+              <th>Last Name</th>
+              <th>Date of Birth</th>
+              <th>Class</th>
+              <th>Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let student of students | paginate: { itemsPerPage: itemsPerPage, currentPage: currentPage }">
+              <td>{{ student.studentId }}</td>
+              <td>{{ student.firstName }}</td>
+              <td>{{ student.lastName }}</td>
+              <td>{{ student.dateOfBirth }}</td>
+              <td>{{ student.className }}</td>
+              <td>{{ student.score }}</td>
+            </tr>
+          </tbody>
+        </table>
+      
+        <pagination-controls (pageChange)="onPageChange($event)"></pagination-controls>
+      </div>      
+</div>
+  
