@@ -55,3 +55,6 @@ Regular Cleanup:
 I would implement a maintenance script to regularly check and clean up unused images from the server to save storage space and keep the directory organized.
 Conclusion
 By following these steps and employing the outlined optimization strategies, I would effectively manage student passport images in my application. This ensures a smooth user experience during image upload and retrieval while maintaining performance and efficiency in image handling.
+
+
+https://youtu.be/xlKfVGIZ3UI

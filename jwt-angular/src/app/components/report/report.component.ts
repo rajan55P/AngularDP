@@ -31,15 +31,18 @@ export class ReportComponent implements OnInit {
     this.loadStudents();
   }
 
-  loadStudents() {
-    this.service.getAllStudentData().subscribe((data) => { 
+  async loadStudents() {
+    try {
+      const data = await this.service.getAllStudentData().toPromise(); 
       this.students = data;
       this.filteredStudents = data; // Initialize filteredStudents with all students
       this.totalItems = this.students.length;
       this.updatePaginatedStudents(); // Update paginated students initially
-    });
+    } catch (error) {
+      console.error('Error loading student data:', error);
+    }
   }
-
+  
   applyFilters() {
     this.filteredStudents = this.students.filter(student => {
         const dob = new Date(student.dateOfBirth).getTime();
@@ -90,7 +93,7 @@ export class ReportComponent implements OnInit {
   }
 
   exportToExcel() {
-    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(this.students);
+    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(this.filteredStudents);
     const wb: XLSX.WorkBook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Students');
     XLSX.writeFile(wb, 'students_report.xlsx');
