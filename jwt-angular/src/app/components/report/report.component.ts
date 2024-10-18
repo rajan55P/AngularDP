@@ -12,7 +12,7 @@ import { JwtService } from '../../service/jwt.service';
 export class ReportComponent implements OnInit {
   students: Student[] = [];
   paginatedStudents: Student[] = [];
-  filteredStudents: Student[] = []; 
+  filteredStudents: Student[] = [];
   filters = {
     studentId: null,
     className: '',
@@ -22,7 +22,7 @@ export class ReportComponent implements OnInit {
     endDate: null
   };
   totalItems: number = 0;
-  itemsPerPage: number = 10; // Set number of items per page
+  itemsPerPage: number = 100; // Set number of items per page to 100
   currentPage: number = 1;
 
   constructor(private service: JwtService) {}
@@ -31,41 +31,89 @@ export class ReportComponent implements OnInit {
     this.loadStudents();
   }
 
+  
+
   async loadStudents() {
     try {
-      const data = await this.service.getAllStudentData().toPromise(); 
-      this.students = data;
-      this.filteredStudents = data; // Initialize filteredStudents with all students
-      this.totalItems = this.students.length;
-      this.updatePaginatedStudents(); // Update paginated students initially
+      const queryParams: any = {
+        page: this.currentPage - 1,
+        size: this.itemsPerPage
+      };
+  
+      // Add only non-null and non-empty filter values
+      if (this.filters.studentId) {
+        queryParams.studentId = this.filters.studentId;
+      }
+      if (this.filters.className) {
+        queryParams.className = this.filters.className;
+      }
+      if (this.filters.startScore !== null) {
+        queryParams.startScore = this.filters.startScore;
+      }
+      if (this.filters.endScore !== null) {
+        queryParams.endScore = this.filters.endScore;
+      }
+      if (this.filters.startDate) {
+        queryParams.startDate = this.filters.startDate;
+      }
+      if (this.filters.endDate) {
+        queryParams.endDate = this.filters.endDate;
+      }
+  
+      const data = await this.service.getPaginatedStudentData(queryParams).toPromise();
+      console.log('Fetched data:', data); // Debugging log
+
+      // this.students = data.content;
+      this.totalItems = data.totalElements;
+      this.filteredStudents = data.content; // Set filteredStudents
+      this.updatePaginatedStudents(); // Update paginated students
     } catch (error) {
       console.error('Error loading student data:', error);
     }
   }
   
+
   applyFilters() {
-    this.filteredStudents = this.students.filter(student => {
-        const dob = new Date(student.dateOfBirth).getTime();
-        const startDate = this.filters.startDate ? new Date(this.filters.startDate).getTime() : null; 
-        const endDate = this.filters.endDate ? new Date(this.filters.endDate).getTime() : null;
-
-        const classFilter = this.filters.className ? student.className.includes(this.filters.className) : true;
-
-        return (!this.filters.studentId || student.studentId === this.filters.studentId) &&
-               (classFilter) &&
-               (!this.filters.startScore || student.score >= this.filters.startScore) &&
-               (!this.filters.endScore || student.score <= this.filters.endScore) &&
-               (startDate === null || dob >= startDate) && 
-               (endDate === null || dob <= endDate);
-    });
-
-    this.totalItems = this.filteredStudents.length; // Update total items based on filtered results
-    this.currentPage = 1; // Reset to first page
-    this.updatePaginatedStudents(); // Call method to update paginated results
-}
-
-
-
+    // Prepare query parameters for pagination and filters
+    const queryParams: any = {
+      page: 0, // Reset to the first page
+      size: this.itemsPerPage
+    };
+  
+    // Add only non-null and non-empty filter values
+    if (this.filters.studentId) {
+      queryParams.studentId = this.filters.studentId;
+    }
+    if (this.filters.className) {
+      queryParams.className = this.filters.className;
+    }
+    if (this.filters.startScore !== null) {
+      queryParams.startScore = this.filters.startScore;
+    }
+    if (this.filters.endScore !== null) {
+      queryParams.endScore = this.filters.endScore;
+    }
+    if (this.filters.startDate) {
+      queryParams.startDate = this.filters.startDate;
+    }
+    if (this.filters.endDate) {
+      queryParams.endDate = this.filters.endDate;
+    }
+  
+    // Fetch filtered students from the server
+    this.service.getPaginatedStudentData(queryParams).subscribe(
+      data => {
+        this.filteredStudents = data.content;
+        this.totalItems = data.totalElements; // Update total items based on filtered results
+        this.currentPage = 1; // Reset to first page
+        this.updatePaginatedStudents();
+      },
+      error => {
+        console.error('Error applying filters:', error);
+      }
+    );
+  }
+  
 
   resetFilters() {
     this.filters = {
@@ -74,28 +122,33 @@ export class ReportComponent implements OnInit {
       startScore: null,
       endScore: null,
       startDate: null,
-      endDate: null,
+      endDate: null
     };
-    this.filteredStudents = this.students; // Reset to all students
-    this.totalItems = this.students.length; // Update total items
-    this.currentPage = 1; // Reset to first page
-    this.updatePaginatedStudents(); // Update paginated students
+    this.loadStudents(); // Reload students without filters
   }
 
   updatePaginatedStudents() {
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    this.paginatedStudents = this.filteredStudents.slice(startIndex, startIndex + this.itemsPerPage);
+    this.paginatedStudents = this.filteredStudents;
   }
 
   onPageChange(page: number) {
+    console.log('Page changed to:', page);
     this.currentPage = page;
-    this.updatePaginatedStudents(); // Update paginated students on page change
+    this.loadStudents(); // Fetch new paginated data from the server
   }
+  
+  
 
   exportToExcel() {
-    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(this.filteredStudents);
-    const wb: XLSX.WorkBook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Students');
-    XLSX.writeFile(wb, 'students_report.xlsx');
+    // Fetch all student data without pagination for export
+    this.service.getAllFilteredStudentData(this.filters).subscribe(data => {
+      const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(data);
+      const wb: XLSX.WorkBook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Students');
+      XLSX.writeFile(wb, 'students_report.xlsx');
+    }, error => {
+      console.error('Error exporting to Excel:', error);
+    });
   }
 }

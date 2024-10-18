@@ -53,6 +53,27 @@ export class JwtService {
     });
   }
 
+  getPaginatedStudentData(params: any): Observable<any> {
+    return this.http.get(BASE_URL + 'paginatedStudents', {
+      headers: this.createAuthorizationHeader(),
+      params: params // Pass dynamic params
+    });
+  }
+
+getAllFilteredStudentData(filters: any): Observable<any> {
+    const params = {
+        studentId: filters.studentId ? filters.studentId.toString() : null,
+        className: filters.className || '',
+        startScore: filters.startScore ? filters.startScore.toString() : null,
+        endScore: filters.endScore ? filters.endScore.toString() : null,
+        startDate: filters.startDate || null,
+        endDate: filters.endDate || null
+    };
+    return this.http.get(BASE_URL + 'students/export', { params, headers: this.createAuthorizationHeader() });
+}
+
+
+
   private createAuthorizationHeader(): HttpHeaders | undefined {
     if (isPlatformBrowser(this.platformId)) {
       const jwtToken = localStorage.getItem('jwt');
