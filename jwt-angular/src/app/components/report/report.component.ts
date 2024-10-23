@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import * as XLSX from 'xlsx';
 import { Student } from '../../models/student.model';
 import { JwtService } from '../../service/jwt.service';
@@ -28,19 +27,17 @@ export class ReportComponent implements OnInit {
   constructor(private service: JwtService) {}
 
   ngOnInit() {
-    this.loadStudents();
+    this.loadStudents(); // Load initial data on component initialization
   }
-
-  
 
   async loadStudents() {
     try {
       const queryParams: any = {
-        page: this.currentPage - 1,
+        page: this.currentPage - 1, // Adjust for zero-based index
         size: this.itemsPerPage
       };
-  
-      // Add only non-null and non-empty filter values
+
+      // Add filters to the query params only if they are not null or empty
       if (this.filters.studentId) {
         queryParams.studentId = this.filters.studentId;
       }
@@ -59,61 +56,22 @@ export class ReportComponent implements OnInit {
       if (this.filters.endDate) {
         queryParams.endDate = this.filters.endDate;
       }
-  
+
       const data = await this.service.getPaginatedStudentData(queryParams).toPromise();
       console.log('Fetched data:', data); // Debugging log
 
-      // this.students = data.content;
-      this.totalItems = data.totalElements;
       this.filteredStudents = data.content; // Set filteredStudents
+      this.totalItems = data.totalElements; // Total number of items returned from the server
       this.updatePaginatedStudents(); // Update paginated students
     } catch (error) {
       console.error('Error loading student data:', error);
     }
   }
-  
 
   applyFilters() {
-    // Prepare query parameters for pagination and filters
-    const queryParams: any = {
-      page: 0, // Reset to the first page
-      size: this.itemsPerPage
-    };
-  
-    // Add only non-null and non-empty filter values
-    if (this.filters.studentId) {
-      queryParams.studentId = this.filters.studentId;
-    }
-    if (this.filters.className) {
-      queryParams.className = this.filters.className;
-    }
-    if (this.filters.startScore !== null) {
-      queryParams.startScore = this.filters.startScore;
-    }
-    if (this.filters.endScore !== null) {
-      queryParams.endScore = this.filters.endScore;
-    }
-    if (this.filters.startDate) {
-      queryParams.startDate = this.filters.startDate;
-    }
-    if (this.filters.endDate) {
-      queryParams.endDate = this.filters.endDate;
-    }
-  
-    // Fetch filtered students from the server
-    this.service.getPaginatedStudentData(queryParams).subscribe(
-      data => {
-        this.filteredStudents = data.content;
-        this.totalItems = data.totalElements; // Update total items based on filtered results
-        this.currentPage = 1; // Reset to first page
-        this.updatePaginatedStudents();
-      },
-      error => {
-        console.error('Error applying filters:', error);
-      }
-    );
+    this.currentPage = 1; // Reset to the first page when applying filters
+    this.loadStudents(); // Load students based on the applied filters
   }
-  
 
   resetFilters() {
     this.filters = {
@@ -128,27 +86,56 @@ export class ReportComponent implements OnInit {
   }
 
   updatePaginatedStudents() {
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    this.paginatedStudents = this.filteredStudents;
+    // Simply assign filteredStudents to paginatedStudents
+    this.paginatedStudents = this.filteredStudents; // Since the server already returns only the required page
   }
 
   onPageChange(page: number) {
+    // Check for valid page number
+    if (page < 1 || page > Math.ceil(this.totalItems / this.itemsPerPage)) {
+      return; // Prevent navigating to invalid page numbers
+    }
     console.log('Page changed to:', page);
     this.currentPage = page;
     this.loadStudents(); // Fetch new paginated data from the server
   }
-  
-  
 
   exportToExcel() {
-    // Fetch all student data without pagination for export
-    this.service.getAllFilteredStudentData(this.filters).subscribe(data => {
-      const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(data);
-      const wb: XLSX.WorkBook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Students');
-      XLSX.writeFile(wb, 'students_report.xlsx');
-    }, error => {
-      console.error('Error exporting to Excel:', error);
-    });
-  }
+    // Prepare query parameters for exporting
+    const queryParams: any = {};
+
+    // Only add filters with valid values
+    if (this.filters.studentId) {
+        queryParams.studentId = this.filters.studentId;
+    }
+    if (this.filters.className) {
+        queryParams.className = this.filters.className;
+    }
+    if (this.filters.startScore !== null) {
+        queryParams.startScore = this.filters.startScore;
+    }
+    if (this.filters.endScore !== null) {
+        queryParams.endScore = this.filters.endScore;
+    }
+    if (this.filters.startDate) {
+        queryParams.startDate = this.filters.startDate;
+    }
+    if (this.filters.endDate) {
+        queryParams.endDate = this.filters.endDate;
+    }
+
+    // Call the API to get all filtered student data for export
+    this.service.getAllFilteredStudentData(queryParams).subscribe(
+        data => {
+            const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(data);
+            const wb: XLSX.WorkBook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Students');
+            XLSX.writeFile(wb, 'students_report.xlsx');
+        },
+        error => {
+            console.error('Error exporting to Excel:', error);
+        }
+    );
+}
+
 }
